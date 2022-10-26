@@ -41,16 +41,61 @@ router.post("/register", async (req, res) => {
 });
 
 //  login handling
-router.post("/login/student", (req, res) => {
-	res.send("hello cliford");
+router.post("/login/student", async (req, res) => {
+	const roll_no = req.body.roll_no;
+	const password = req.body.password;
+
+	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+
+	const user = await Student.findByPk(roll_no);
+	if (
+		user !== null &&
+		crypto.createHash("sha256").update(password).digest("hex") == user.password
+	) {
+		return res.json({
+			access_token: jwt.encode({ roll_no: roll_no }, secret),
+		});
+	} else {
+		return res.json({ message: "Incorrect roll number or password" });
+	}
 });
 
-router.post("/login/ca", (req, res) => {
-	res.send("hello cliford");
+router.post("/login/ca", async (req, res) => {
+	const roll_no = req.body.roll_no;
+	const password = req.body.password;
+
+	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+
+	const user = await Club.findByPk(roll_no);
+	if (
+		user !== null &&
+		crypto.createHash("sha256").update(password).digest("hex") == user.password
+	) {
+		return res.json({
+			access_token: jwt.encode({ roll_no: roll_no }, secret),
+		});
+	} else {
+		return res.json({ message: "Incorrect roll number or password" });
+	}
 });
 
-router.post("/login/sa", (req, res) => {
-	res.send("hello cliford");
+router.post("/login/sa", async (req, res) => {
+	const roll_no = req.body.roll_no;
+	const password = req.body.password;
+
+	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+
+	const user = await SysAdmin.findByPk(roll_no);
+	if (
+		user !== null &&
+		crypto.createHash("sha256").update(password).digest("hex") == user.password
+	) {
+		return res.json({
+			access_token: jwt.encode({ roll_no: roll_no }, secret),
+		});
+	} else {
+		return res.json({ message: "Incorrect roll number or password" });
+	}
 });
 
 // login end
@@ -60,7 +105,9 @@ router.post("/event_add", async (req, res) => {
 	let club_name;
 	try {
 		club_name = jwt.decode(req.headers.authorization, secret);
-	} catch (err) {}
+	} catch (err) {
+		res.json({ message: err.message });
+	}
 	const { event_name, event_desc, event_venue, max_limit, slot, date } = req.body;
 
 	const eventDate = new Date(date).toISOString().substring(0, 10);
@@ -71,7 +118,7 @@ router.post("/event_add", async (req, res) => {
 	if (booking == null) {
 		const booking = await Booking.create({
 			slot,
-			date,
+			date: eventDate,
 			booking_venue_name: event_venue,
 		});
 		const event = await Event.create({
@@ -97,17 +144,33 @@ router.post("/event_view", (req, res) => {
 	res.send("hello cliford");
 });
 
-router.post("/club_edit", (req, res) => {
-	res.send("hello cliford");
+router.post("/club_edit", async (req, res) => {
+	const club_name = req.body.club_name;
+	const club = await Club.findByPk(club_name);
+	club.club_desc = req.body.club_desc;
+	await club.save();
+	res.json({ msg: "Edited" });
 });
 
 //  Add new club members
-router.post("/club_member_add", (req, res) => {
-	res.send("hello cliford");
+router.post("/club_member_add", async (req, res) => {
+	const club_name = jwt.decode(req.headers.authorization, secret);
+	const { roll_no, position } = req.body;
+	const student = Student.findByPk(roll_no);
+
+	if (student === null) return res.json({ msg: "Invalid roll no" });
+	await Member.create({ roll_no, club_name, position });
+	res.json({ msg: "Member added." });
 });
 
-router.post("/club_member_delete", (req, res) => {
-	res.send("hello cliford");
+router.post("/club_member_delete", async (req, res) => {
+	const club_name = jwt.decode(req.headers.authorization, secret);
+	const roll_no = req.body.roll_no;
+
+	const member = await Member.findOne({ where: { roll_no: roll_no } });
+	await member.destroy();
+
+	res.json({ msg: "Member deleted." });
 });
 
 router.post("/club_add", (req, res) => {
