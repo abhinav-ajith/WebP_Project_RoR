@@ -3,7 +3,108 @@ const router = express.Router();
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-	res.send("hello cliford");
+  res.send("hello cliford");
+});
+
+// Accepts student details and adds student to students database, returns access token
+router.post("/register", (req, res) => {
+  res.send("hello cliford");
+});
+
+//  login handling
+router.post("/login/student", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/login/ca", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/login/sa", (req, res) => {
+  res.send("hello cliford");
+});
+
+// login end
+
+// A ccepts event details, enters event into event db and booking in booking db, returns event id
+router.post("/event_add", (req, res) => {
+  res.send("hello cliford");
+});
+
+// Accepts new event details if any, and returns the event id
+router.post("/event_edit", (req, res) => {
+  res.send("hello cliford");
+});
+
+// Accepts events id and returns event details
+router.post("/event_view", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/club_edit", (req, res) => {
+  res.send("hello cliford");
+});
+
+//  Add new club members
+router.post("/club_member_add", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/club_member_delete", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/club_add", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.post("/venue_add", (req, res) => {
+  res.send("hello cliford");
+});
+
+// Accepts event id, enters student into participants db, returns confirmation
+router.post("/event_register", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/event_register", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/events_all", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/events_future", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/events_student", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/clubs_all", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/club_members", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/club_info", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/club/:club_name", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/registered_students", (req, res) => {
+  res.send("hello cliford");
+});
+
+router.get("/student_details", (req, res) => {
+  res.send("hello cliford");
 });
 
 module.exports = router;
