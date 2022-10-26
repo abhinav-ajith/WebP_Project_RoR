@@ -1,5 +1,19 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
+const jwt = require("jwt-simple");
+const secret = "secret";
+const sequelize = require("./db");
+const {
+  Student,
+  Member,
+  Club,
+  Participation,
+  Event,
+  Booking,
+  Venue,
+  SysAdmin,
+} = sequelize.models;
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -7,8 +21,35 @@ router.get("/", function (req, res, next) {
 });
 
 // Accepts student details and adds student to students database, returns access token
-router.post("/register", (req, res) => {
-  res.send("hello cliford");
+router.post("/register", async (req, res) => {
+  const { name, roll_no, email, password, confirm_password } = req.body;
+  const hashed_password = crypto
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
+
+  const student = await Student.findByPk(roll_no);
+  console.log(student);
+  if (student === null) {
+    if (password === confirm_password) {
+      await Student.create({
+        name: name,
+        roll_number: roll_no,
+        email: email,
+        password: hashed_password,
+      }).catch((err) => {
+        res.json({ message: "Database Error:" + err });
+      });
+
+      return res.json({
+        access_token: jwt.encode({ roll_no: roll_no }, secret),
+      });
+    } else {
+      return res.json({ message: "Passwords don't match" });
+    }
+  } else {
+    res.send({ message: "Roll number already exists" });
+  }
 });
 
 //  login handling
@@ -64,11 +105,9 @@ router.post("/venue_add", (req, res) => {
 
 // Accepts event id, enters student into participants db, returns confirmation
 router.post("/event_register", (req, res) => {
-  res.send("hello cliford");
-});
-
-router.get("/event_register", (req, res) => {
-  res.send("hello cliford");
+  console.log(req);
+  const roll_number = jwt.decode(req.headers.authorization, secret);
+  res.json({ roll_number });
 });
 
 router.get("/events_all", (req, res) => {
