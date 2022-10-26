@@ -4,224 +4,266 @@ const crypto = require("crypto");
 const jwt = require("jwt-simple");
 const secret = "secret";
 const sequelize = require("./db");
-const { Student, Member, Club, Participation, Event, Booking, Venue, SysAdmin } = sequelize.models;
+const {
+  Student,
+  Member,
+  Club,
+  Participation,
+  Event,
+  Booking,
+  Venue,
+  SysAdmin,
+} = sequelize.models;
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 // Accepts student details and adds student to students database, returns access token
 router.post("/register", async (req, res) => {
-	const { name, roll_no, email, password, confirm_password } = req.body;
-	const hashed_password = crypto.createHash("sha256").update(password).digest("hex");
+  const { name, roll_no, email, password, confirm_password } = req.body;
+  const hashed_password = crypto
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
 
-	const student = await Student.findByPk(roll_no);
-	console.log(student);
-	if (student === null) {
-		if (password === confirm_password) {
-			await Student.create({
-				name: name,
-				roll_number: roll_no,
-				email: email,
-				password: hashed_password,
-			}).catch((err) => {
-				res.json({ message: "Database Error:" + err });
-			});
+  const student = await Student.findByPk(roll_no);
+  console.log(student);
+  if (student === null) {
+    if (password === confirm_password) {
+      await Student.create({
+        name: name,
+        roll_number: roll_no,
+        email: email,
+        password: hashed_password,
+      }).catch((err) => {
+        res.json({ message: "Database Error:" + err });
+      });
 
-			return res.json({
-				access_token: jwt.encode({ roll_no: roll_no }, secret),
-			});
-		} else {
-			return res.json({ message: "Passwords don't match" });
-		}
-	} else {
-		res.send({ message: "Roll number already exists" });
-	}
+      return res.json({
+        access_token: jwt.encode({ roll_no: roll_no }, secret),
+      });
+    } else {
+      return res.json({ message: "Passwords don't match" });
+    }
+  } else {
+    res.send({ message: "Roll number already exists" });
+  }
 });
 
 //  login handling
 router.post("/login/student", async (req, res) => {
-	const roll_no = req.body.roll_no;
-	const password = req.body.password;
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
 
-	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
 
-	const user = await Student.findByPk(roll_no);
-	if (
-		user !== null &&
-		crypto.createHash("sha256").update(password).digest("hex") == user.password
-	) {
-		return res.json({
-			access_token: jwt.encode({ roll_no: roll_no }, secret),
-		});
-	} else {
-		return res.json({ message: "Incorrect roll number or password" });
-	}
+  const user = await Student.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
 router.post("/login/ca", async (req, res) => {
-	const roll_no = req.body.roll_no;
-	const password = req.body.password;
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
 
-	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
 
-	const user = await Club.findByPk(roll_no);
-	if (
-		user !== null &&
-		crypto.createHash("sha256").update(password).digest("hex") == user.password
-	) {
-		return res.json({
-			access_token: jwt.encode({ roll_no: roll_no }, secret),
-		});
-	} else {
-		return res.json({ message: "Incorrect roll number or password" });
-	}
+  const user = await Club.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
 router.post("/login/sa", async (req, res) => {
-	const roll_no = req.body.roll_no;
-	const password = req.body.password;
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
 
-	if (!roll_no || !password) return res.json({ msg: "One or more fields are empty." });
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
 
-	const user = await SysAdmin.findByPk(roll_no);
-	if (
-		user !== null &&
-		crypto.createHash("sha256").update(password).digest("hex") == user.password
-	) {
-		return res.json({
-			access_token: jwt.encode({ roll_no: roll_no }, secret),
-		});
-	} else {
-		return res.json({ message: "Incorrect roll number or password" });
-	}
+  const user = await SysAdmin.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
 // login end
 
 // Accepts event details, enters event into event db and booking in booking db, returns event id
 router.post("/event_add", async (req, res) => {
-	let club_name;
-	try {
-		club_name = jwt.decode(req.headers.authorization, secret);
-	} catch (err) {
-		res.json({ message: err.message });
-	}
-	const { event_name, event_desc, event_venue, max_limit, slot, date } = req.body;
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret);
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+  const { event_name, event_desc, event_venue, max_limit, slot, date } =
+    req.body;
 
-	const eventDate = new Date(date).toISOString().substring(0, 10);
+  const eventDate = new Date(date).toISOString().substring(0, 10);
 
-	const booking = Booking.findOne({
-		where: { date: eventDate, slot, booking_venue_name: event_venue },
-	});
-	if (booking == null) {
-		const booking = await Booking.create({
-			slot,
-			date: eventDate,
-			booking_venue_name: event_venue,
-		});
-		const event = await Event.create({
-			event_name,
-			event_club: club_name,
-			event_desc,
-			max_limit,
-			event_booking_id: booking.booking_id,
-		});
-		res.json({ event_id: event.event_id });
-	} else {
-		res.json({ message: "slot unavailable" });
-	}
+  const booking = Booking.findOne({
+    where: { date: eventDate, slot, booking_venue_name: event_venue },
+  });
+  if (booking == null) {
+    const booking = await Booking.create({
+      slot,
+      date: eventDate,
+      booking_venue_name: event_venue,
+    });
+    const event = await Event.create({
+      event_name,
+      event_club: club_name,
+      event_desc,
+      max_limit,
+      event_booking_id: booking.booking_id,
+    });
+    res.json({ event_id: event.event_id });
+  } else {
+    res.json({ message: "slot unavailable" });
+  }
 });
 
 // Accepts new event details if any, and returns the event id
 router.post("/event_edit", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 // Accepts events id and returns event details
 router.post("/event_view", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.post("/club_edit", async (req, res) => {
-	const club_name = req.body.club_name;
-	const club = await Club.findByPk(club_name);
-	club.club_desc = req.body.club_desc;
-	await club.save();
-	res.json({ msg: "Edited" });
+  const club_name = req.body.club_name;
+  const club = await Club.findByPk(club_name);
+  club.club_desc = req.body.club_desc;
+  await club.save();
+  res.json({ msg: "Edited" });
 });
 
 //  Add new club members
 router.post("/club_member_add", async (req, res) => {
-	const club_name = jwt.decode(req.headers.authorization, secret);
-	const { roll_no, position } = req.body;
-	const student = Student.findByPk(roll_no);
+  const club_name = jwt.decode(req.headers.authorization, secret);
+  const { roll_no, position } = req.body;
+  const student = Student.findByPk(roll_no);
 
-	if (student === null) return res.json({ msg: "Invalid roll no" });
-	await Member.create({ roll_no, club_name, position });
-	res.json({ msg: "Member added." });
+  if (student === null) return res.json({ msg: "Invalid roll no" });
+  await Member.create({ roll_no, club_name, position });
+  res.json({ msg: "Member added." });
 });
 
 router.post("/club_member_delete", async (req, res) => {
-	const club_name = jwt.decode(req.headers.authorization, secret);
-	const roll_no = req.body.roll_no;
+  const club_name = jwt.decode(req.headers.authorization, secret);
+  const roll_no = req.body.roll_no;
 
-	const member = await Member.findOne({ where: { roll_no: roll_no } });
-	await member.destroy();
+  const member = await Member.findOne({ where: { roll_no: roll_no } });
+  await member.destroy();
 
-	res.json({ msg: "Member deleted." });
+  res.json({ msg: "Member deleted." });
 });
 
-router.post("/club_add", (req, res) => {
-	res.send("hello cliford");
+router.post("/club_add", async (req, res) => {
+  const { club_name, club_desc, password } = req.body;
+  const hashed_password = crypto
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
+  const club = await Club.create({
+    club_name,
+    club_desc,
+    password: hashed_password,
+  });
+  res.json({ club: club_name });
 });
 
-router.post("/venue_add", (req, res) => {
-	res.send("hello cliford");
+router.post("/venue_add", async (req, res) => {
+  const venue_name = req.body.venue_name;
+  const venue = await Venue.create({ venue_name: venue_name });
+  res.json({ venue: venue_name });
 });
 
 // Accepts event id, enters student into participants db, returns confirmation
 router.post("/event_register", (req, res) => {
-	console.log(req);
-	const roll_number = jwt.decode(req.headers.authorization, secret);
-	res.json({ roll_number });
+  console.log(req);
+  const roll_number = jwt.decode(req.headers.authorization, secret);
+  res.json({ roll_number });
 });
 
 router.get("/events_all", (req, res) => {
-	res.send("hello cliford");
+  const events = Event.findAll();
+  res.json({ events: events });
 });
 
 router.get("/events_future", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/events_student", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/clubs_all", (req, res) => {
-	res.send("hello cliford");
+  const clubs = Club.findAll();
+  if (clubs === null) {
+    return res.json({ msg: "No clubs" });
+  } else {
+    res.json({ clubs: clubs });
+  }
+});
+router.get("/venues_all", (req, res) => {
+  const venues = Venue.findAll();
+  if (venues === null) {
+    return res.json({ msg: "No venues" });
+  } else {
+    res.json({ venues: venues });
+  }
 });
 
 router.get("/club_members", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/club_info", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/club/:club_name", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/registered_students", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 router.get("/student_details", (req, res) => {
-	res.send("hello cliford");
+  res.send("hello cliford");
 });
 
 module.exports = router;
