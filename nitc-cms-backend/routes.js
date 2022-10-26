@@ -4,146 +4,161 @@ const crypto = require("crypto");
 const jwt = require("jwt-simple");
 const secret = "secret";
 const sequelize = require("./db");
-const {
-  Student,
-  Member,
-  Club,
-  Participation,
-  Event,
-  Booking,
-  Venue,
-  SysAdmin,
-} = sequelize.models;
+const { Student, Member, Club, Participation, Event, Booking, Venue, SysAdmin } = sequelize.models;
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 // Accepts student details and adds student to students database, returns access token
 router.post("/register", async (req, res) => {
-  const { name, roll_no, email, password, confirm_password } = req.body;
-  const hashed_password = crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
+	const { name, roll_no, email, password, confirm_password } = req.body;
+	const hashed_password = crypto.createHash("sha256").update(password).digest("hex");
 
-  const student = await Student.findByPk(roll_no);
-  console.log(student);
-  if (student === null) {
-    if (password === confirm_password) {
-      await Student.create({
-        name: name,
-        roll_number: roll_no,
-        email: email,
-        password: hashed_password,
-      }).catch((err) => {
-        res.json({ message: "Database Error:" + err });
-      });
+	const student = await Student.findByPk(roll_no);
+	console.log(student);
+	if (student === null) {
+		if (password === confirm_password) {
+			await Student.create({
+				name: name,
+				roll_number: roll_no,
+				email: email,
+				password: hashed_password,
+			}).catch((err) => {
+				res.json({ message: "Database Error:" + err });
+			});
 
-      return res.json({
-        access_token: jwt.encode({ roll_no: roll_no }, secret),
-      });
-    } else {
-      return res.json({ message: "Passwords don't match" });
-    }
-  } else {
-    res.send({ message: "Roll number already exists" });
-  }
+			return res.json({
+				access_token: jwt.encode({ roll_no: roll_no }, secret),
+			});
+		} else {
+			return res.json({ message: "Passwords don't match" });
+		}
+	} else {
+		res.send({ message: "Roll number already exists" });
+	}
 });
 
 //  login handling
 router.post("/login/student", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/login/ca", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/login/sa", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 // login end
 
-// A ccepts event details, enters event into event db and booking in booking db, returns event id
-router.post("/event_add", (req, res) => {
-  res.send("hello cliford");
+// Accepts event details, enters event into event db and booking in booking db, returns event id
+router.post("/event_add", async (req, res) => {
+	let club_name;
+	try {
+		club_name = jwt.decode(req.headers.authorization, secret);
+	} catch (err) {}
+	const { event_name, event_desc, event_venue, max_limit, slot, date } = req.body;
+
+	const eventDate = new Date(date).toISOString().substring(0, 10);
+
+	const booking = Booking.findOne({
+		where: { date: eventDate, slot, booking_venue_name: event_venue },
+	});
+	if (booking == null) {
+		const booking = await Booking.create({
+			slot,
+			date,
+			booking_venue_name: event_venue,
+		});
+		const event = await Event.create({
+			event_name,
+			event_club: club_name,
+			event_desc,
+			max_limit,
+			event_booking_id: booking.booking_id,
+		});
+		res.json({ event_id: event.event_id });
+	} else {
+		res.json({ message: "slot unavailable" });
+	}
 });
 
 // Accepts new event details if any, and returns the event id
 router.post("/event_edit", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 // Accepts events id and returns event details
 router.post("/event_view", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/club_edit", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 //  Add new club members
 router.post("/club_member_add", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/club_member_delete", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/club_add", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.post("/venue_add", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 // Accepts event id, enters student into participants db, returns confirmation
 router.post("/event_register", (req, res) => {
-  console.log(req);
-  const roll_number = jwt.decode(req.headers.authorization, secret);
-  res.json({ roll_number });
+	console.log(req);
+	const roll_number = jwt.decode(req.headers.authorization, secret);
+	res.json({ roll_number });
 });
 
 router.get("/events_all", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/events_future", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/events_student", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/clubs_all", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/club_members", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/club_info", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/club/:club_name", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/registered_students", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 router.get("/student_details", (req, res) => {
-  res.send("hello cliford");
+	res.send("hello cliford");
 });
 
 module.exports = router;
