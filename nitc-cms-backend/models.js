@@ -1,14 +1,16 @@
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
-	const Student = sequelize.define("Student", {
-		name: { type: DataTypes.STRING },
-		roll_number: { type: DataTypes.STRING, primaryKey: true },
-		email: { type: DataTypes.STRING },
-	});
-	Student.hasMany(Club);
-	Student.hasOne(Member);
-	Student.hasMany(Event);
+	const Student = sequelize.define(
+		"Student",
+		{
+			name: { type: DataTypes.STRING },
+			password: { type: DataTypes.STRING },
+			roll_number: { type: DataTypes.STRING, primaryKey: true },
+			email: { type: DataTypes.STRING },
+		},
+		{ createdAt: false, updatedAt: false }
+	);
 
 	const Member = sequelize.define(
 		"Member",
@@ -17,8 +19,6 @@ module.exports = (sequelize) => {
 		},
 		{ createdAt: false, updatedAt: false }
 	);
-	Member.belongsTo(Club, { foreignKey: "club" });
-	Member.belongsTo(Student, { foreignKey: "member_roll_no" });
 
 	const Club = sequelize.define(
 		"Club",
@@ -29,25 +29,65 @@ module.exports = (sequelize) => {
 		},
 		{ createdAt: false, updatedAt: false }
 	);
-	Club.hasMany(Student);
-	Club.hasMany(Event);
 
-	const Participation = sequelize.define("Participation", { createdAt: false, updatedAt: false });
-	Participation.hasOne(Student, { foreignKey: "participation_roll" });
-	Participation.hasOne(Event, { foreignKey: "participation_event" });
+	const Participation = sequelize.define(
+		"Participation",
+		{},
+		{ createdAt: false, updatedAt: false }
+	);
 
-	const Event = sequelize.define("Event", {
-		event_id: { type: DataTypes.INTEGER, primaryKey: true },
-		event_name: { type: DataTypes.STRING },
-		event_desc: { type: DataTypes.STRING },
-		max_limit: { type: DataTypes.INTEGER },
+	const Event = sequelize.define(
+		"Event",
+		{
+			event_id: { type: DataTypes.INTEGER, primaryKey: true },
+			event_name: { type: DataTypes.STRING },
+			event_desc: { type: DataTypes.STRING },
+			max_limit: { type: DataTypes.INTEGER },
+		},
+		{ createdAt: false, updatedAt: false }
+	);
+
+	const Booking = sequelize.define(
+		"Booking",
+		{
+			booking_id: { type: DataTypes.INTEGER, primaryKey: true },
+			slot: { type: DataTypes.STRING },
+			date: { type: DataTypes.DATE },
+		},
+		{ createdAt: false, updatedAt: false }
+	);
+
+	const Venue = sequelize.define(
+		"Venue",
+		{
+			venue_name: { type: DataTypes.STRING, primaryKey: true },
+		},
+		{ createdAt: false, updatedAt: false }
+	);
+
+	const SysAdmin = sequelize.define(
+		"SysAdmin",
+		{
+			admin_username: { type: DataTypes.STRING, primaryKey: true },
+			admin_password: { type: DataTypes.STRING },
+		},
+		{ createdAt: false, updatedAt: false }
+	);
+
+	Student.belongsToMany(Club, {
+		through: "Member",
+		foreignKey: "member_roll_number",
+		otherKey: "club",
 	});
-	Event.hasMany(Participation);
-	Event.hasOne(Club, { foreignKey: "event_club" });
-	Event.hasOne(Booking, { foreignKey: "event_booking_id" });
+	Event.belongsTo(Club, { foreignKey: "event_club" });
+	Student.belongsToMany(Event, {
+		through: "Participation",
+		foreignKey: "participation_roll",
+		otherKey: "participation_event",
+	});
+	Event.belongsTo(Booking, { foreignKey: "event_booking_id" });
+	Booking.belongsTo(Venue, { foreignKey: "booking_venue_name" });
 
-	Booking.hasOne(Event);
-
-	sequelize.sync({ alter: true });
-	return { Student };
+	sequelize.sync();
+	return { Student, Member, Club, Participation, Event, SysAdmin, Venue, Booking };
 };
