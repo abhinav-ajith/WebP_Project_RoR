@@ -53,16 +53,64 @@ router.post("/register", async (req, res) => {
 });
 
 //  login handling
-router.post("/login/student", (req, res) => {
-  res.send("hello cliford");
+router.post("/login/student", async (req, res) => {
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
+
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
+
+  const user = await Student.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
-router.post("/login/ca", (req, res) => {
-  res.send("hello cliford");
+router.post("/login/ca", async (req, res) => {
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
+
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
+
+  const user = await Club.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
-router.post("/login/sa", (req, res) => {
-  res.send("hello cliford");
+router.post("/login/sa", async (req, res) => {
+  const roll_no = req.body.roll_no;
+  const password = req.body.password;
+
+  if (!roll_no || !password)
+    return res.json({ msg: "One or more fields are empty." });
+
+  const user = await Club.findByPk(roll_no);
+  if (
+    user !== null &&
+    crypto.createHash("sha256").update(password).digest("hex") == user.password
+  ) {
+    return res.json({
+      access_token: jwt.encode({ roll_no: roll_no }, secret),
+    });
+  } else {
+    return res.json({ message: "Incorrect roll number or password" });
+  }
 });
 
 // login end
