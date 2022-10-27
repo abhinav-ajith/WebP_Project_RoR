@@ -306,15 +306,40 @@ router.get("/club_info", (req, res) => {
 });
 
 router.get("/club/:club_name", (req, res) => {
-  res.send("hello cliford");
+  
+  try {
+    const club = Club.findByPk(req.params.club_name);
+    const events = Event.findAll({where : {event_club : req.params.club_name}});
+    let result = {};
+    result["club_name"] = req.params.club_name;
+    result["club_desc"] = club.club_desc;
+    const members_rno = Member.findAll({where : {club:req.params.club_name}});
+  }
+  // to be continued
 });
 
 router.get("/registered_students", (req, res) => {
-  res.send("hello cliford");
+  const club_name = jwt.decode(req.headers.authorization, secret);
+  const event_id = req.body.event_id;
+  let participants = [];
+  const participations = Participation.findAll({
+    where: { participation_event: event_id },
+  });
+  participations.forEach((participation)=>{
+    let participant = Student.findByPk(partipation.participation_roll);
+    participants.append({
+      roll_no : participant.roll_no,
+      name : participant.name ,
+      email : participant.email
+    })
+  });
+  res.json({participants : participants});
 });
 
-router.get("/student_details", (req, res) => {
-  res.send("hello cliford");
+router.get("/student_details", async (req, res) => {
+  const roll_number = jwt.decode(req.headers.authorization, secret);
+  student = Student.findByPk(roll_number);
+  res.json({msg:student});
 });
 
 module.exports = router;
