@@ -17,7 +17,7 @@ const {
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-  res.send("hello cliford");
+  res.send("You shouldnt be here");
 });
 
 // Accepts student details and adds student to students database, returns access token
@@ -187,7 +187,7 @@ router.post("/event_view", async (req, res) => {
   const event_id = req.body.event_id;
   let event = await Event.findByPk(event_id);
   const booking = await Booking.findByPk(event.event_booking_id);
-  let event_details = event;
+  let event_details = event.get({ plain: true });
   event_details["slot"] = booking.slot;
   event_details["date"] = booking.date;
   event_details["venue"] = booking.booking_venue_name;
@@ -374,30 +374,85 @@ router.get("/venues_all", async (req, res) => {
   }
 });
 
-router.get("/club_members", (req, res) => {
-  res.send("hello cliford");
+router.get("/club_members", async (req, res) => {
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
+  const members = await Member.findAll({ where: { club: club_name } });
+  const result = {};
+  for (const member of members) {
+    let name = await Student.findByPk(member.member_roll_number);
+    result["member_roll_number"] = name;
+  }
+  return res.json({ members: members });
 });
 
-router.get("/club_info", (req, res) => {
-  res.send("hello cliford");
+router.get("/club_info", async (req, res) => {
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
+  const club = await Club.findByPk(club_name);
+  results = {};
+  result["club_name"] = club_name;
+  result["club_desc"] = club.club_desc;
+  const members_rno = await Member.findAll({ where: { club: club_name } });
+  let members = [];
+  for (const member of members_rno) {
+    let name = await Student.findByPk(member.member_roll_number);
+    members.append({
+      name: name,
+      roll_no: member["member_roll_number"],
+      position: member["position"],
+    });
+  }
+  result["members"] = members;
+  const events = await Event.findAll({ where: { club_name: club_name } });
+  for (const event of events) {
+    let booking = await Booking.findByPk(event.event_booking_id);
+    event["slot"] = booking.slot;
+    event["date"] = booking.date;
+  }
+  result["events"] = events;
+  return res.json({ info: result });
 });
 
 router.get("/club/:club_name", async (req, res) => {
   try {
     const club = await Club.findByPk(req.params.club_name);
-    const events = await Event.findAll({
-      where: { event_club: req.params.club_name },
-    });
-    let result = {};
-    result["club_name"] = req.params.club_name;
-    result["club_desc"] = club.club_desc;
-    const members_rno = await Member.findAll({
-      where: { club: req.params.club_name },
-    });
   } catch (err) {
     return res.json({ msg: err.message });
   }
-  // to be continued
+  let result = {};
+  result["club_name"] = req.params.club_name;
+  result["club_desc"] = club.club_desc;
+  const members_rno = await Member.findAll({
+    where: { club: req.params.club_name },
+  });
+  let members = [];
+  for (const member of members_rno) {
+    let name = await Student.findByPk(member.member_roll_number);
+    members.append({ name: name, position: member.position });
+  }
+  result["members"] = members;
+  const events = await Event.findAll({
+    where: { event_club: req.params.club_name },
+  }).get({ plain: true });
+
+  for (const event of events) {
+    let booking = await Booking.findByPk(event.event_booking_id);
+    event["slot"] = booking.slot;
+    event["date"] = booking.date;
+  }
+  result["events"] = events;
+  return res.json({ info: result });
 });
 
 router.get("/registered_students", async (req, res) => {
@@ -408,7 +463,7 @@ router.get("/registered_students", async (req, res) => {
     where: { participation_event: event_id },
   });
   for (const participation of participations) {
-    let participant = Student.findByPk(partipation.participation_roll);
+    let participant = await Student.findByPk(participation.participation_roll);
     participants.append({
       roll_no: participant.roll_no,
       name: participant.name,
