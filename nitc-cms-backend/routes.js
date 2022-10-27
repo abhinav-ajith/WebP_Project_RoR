@@ -153,6 +153,13 @@ router.post("/event_add", async (req, res) => {
 
 // Accepts new event details if any, and returns the event id
 router.post("/event_edit", async (req, res) => {
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const {
     event_id,
     event_name,
@@ -188,7 +195,13 @@ router.post("/event_view", async (req, res) => {
 });
 
 router.post("/club_edit", async (req, res) => {
-  const club_name = req.body.club_name;
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const club = await Club.findByPk(club_name);
   club.club_desc = req.body.club_desc;
   await club.save();
@@ -197,7 +210,13 @@ router.post("/club_edit", async (req, res) => {
 
 //  Add new club members
 router.post("/club_member_add", async (req, res) => {
-  const club_name = jwt.decode(req.headers.authorization, secret);
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const { roll_no, position } = req.body;
   const student = Student.findByPk(roll_no);
 
@@ -207,7 +226,13 @@ router.post("/club_member_add", async (req, res) => {
 });
 
 router.post("/club_member_delete", async (req, res) => {
-  const club_name = jwt.decode(req.headers.authorization, secret);
+  let club_name;
+  try {
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const roll_no = req.body.roll_no;
 
   const member = await Member.findOne({ where: { roll_no: roll_no } });
@@ -217,6 +242,16 @@ router.post("/club_member_delete", async (req, res) => {
 });
 
 router.post("/club_add", async (req, res) => {
+  let admin_username;
+  try {
+    admin_username = jwt.decode(
+      req.headers.authorization,
+      secret
+    ).admin_username;
+    if (!admin_username) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const { club_name, club_desc, password } = req.body;
   const hashed_password = crypto
     .createHash("sha256")
@@ -231,16 +266,55 @@ router.post("/club_add", async (req, res) => {
 });
 
 router.post("/venue_add", async (req, res) => {
+  let admin_username;
+  try {
+    admin_username = jwt.decode(
+      req.headers.authorization,
+      secret
+    ).admin_username;
+    if (!admin_username) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
   const venue_name = req.body.venue_name;
   const venue = await Venue.create({ venue_name: venue_name });
   return res.json({ venue: venue_name });
 });
 
 // Accepts event id, enters student into participants db, returns confirmation
-router.post("/event_register", (req, res) => {
-  console.log(req);
-  const roll_number = jwt.decode(req.headers.authorization, secret);
-  return res.json({ roll_number });
+router.post("/event_register", async (req, res) => {
+  let roll_number;
+  try {
+    roll_number = jwt.decode(req.headers.authorization, secret).roll_number;
+    if (!roll_number) return res.json({ message: "jwt validation error" });
+  } catch (err) {
+    return res.json({ message: err.message });
+  }
+
+  const event_id = req.body.event_id;
+  const participations = Participation.findAll({
+    where: { participation_roll: roll_number },
+  });
+  for (const participation of participations) {
+    if (event_id == participation.participation_event)
+      return res.json({ msg: "Already registered" });
+  }
+  const max_limit = (await Event.findByPk(event_id)).max_limit;
+  const count = await Participation.count({
+    where: { participation_event: event_id },
+  });
+  if (count >= max_limit) {
+    return res.json({ msg: "Max participants reached." });
+  }
+  try {
+    await Participation.create({
+      participation_roll: roll_number,
+      participation_event: event_id,
+    });
+  } catch (error) {
+    return res.json({ message: "Database Error:" + error });
+  }
+  return res.json({ msg: "Registered" });
 });
 
 router.get("/events_all", (req, res) => {
