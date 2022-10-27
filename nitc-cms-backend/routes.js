@@ -152,8 +152,15 @@ router.post("/event_add", async (req, res) => {
 
 // Accepts new event details if any, and returns the event id
 router.post("/event_edit", async (req, res) => {
-  const { event_id, event_name, event_desc, event_venue, max_limit, slot, date } =
-    req.body;
+  const {
+    event_id,
+    event_name,
+    event_desc,
+    event_venue,
+    max_limit,
+    slot,
+    date,
+  } = req.body;
   const event = await Event.findByPk(event_id);
   const booking = await Booking.findByPk(event.event_booking_id);
   if (event_name) event.event_name = event_name;
@@ -164,7 +171,7 @@ router.post("/event_edit", async (req, res) => {
   if (event_venue) booking.booking_venue_name = event_venue;
   await event.save();
   await booking.save();
-  res.json({ event_id :event_id });
+  res.json({ event_id: event_id });
 });
 
 // Accepts events id and returns event details
@@ -173,10 +180,10 @@ router.post("/event_view", async (req, res) => {
   let event = await Event.findByPk(event_id);
   const booking = await Booking.findByPk(event.event_booking_id);
   let event_details = event;
-  event_details['slot'] = booking.slot;
-  event_details['date'] = booking.date;
-  event_details['venue'] = booking.booking_venue_name;
-  res.json({event : event_details}); 
+  event_details["slot"] = booking.slot;
+  event_details["date"] = booking.date;
+  event_details["venue"] = booking.booking_venue_name;
+  res.json({ event: event_details });
 });
 
 router.post("/club_edit", async (req, res) => {
@@ -241,11 +248,36 @@ router.get("/events_all", (req, res) => {
 });
 
 router.get("/events_future", (req, res) => {
-  res.send("hello cliford");
+  const events = Event.findAll();
+  const future_events = [];
+  events.forEach((event) => {
+    let booking = Booking.findByPk(event.event_booking_id);
+    if (booking.date > new Date().toISOString().substring(0, 10)) {
+      future_events.append({
+        ...event.get({ plain: true }, ...booking.get({ plain: true })),
+      });
+    }
+  });
+  res.json({ events: future_events });
 });
 
 router.get("/events_student", (req, res) => {
-  res.send("hello cliford");
+  const roll_number = jwt.decode(req.headers.authorization, secret);
+  const participations = Participation.findAll({
+    where: { participation_roll: roll_number },
+  });
+  const events = [];
+  participations.forEach((participation) => {
+    let event = Event.findByPk(participation.participation_event);
+    let booking = Booking.findByPk(event.event_booking_id);
+    if (booking.date > new Date().toISOString().substring(0, 10)) {
+      events.append({
+        ...event.get({ plain: true }, ...booking.get({ plain: true })),
+      });
+    }
+  });
+
+  res.json({ events: events });
 });
 
 router.get("/clubs_all", (req, res) => {
