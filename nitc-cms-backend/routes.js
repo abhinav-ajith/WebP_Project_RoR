@@ -74,42 +74,42 @@ router.post("/login/student", async (req, res) => {
 });
 
 router.post("/login/ca", async (req, res) => {
-  const roll_no = req.body.roll_no;
+  const club_name = req.body.club_name;
   const password = req.body.password;
 
-  if (!roll_no || !password)
+  if (!club_name || !password)
     return res.json({ msg: "One or more fields are empty." });
 
-  const user = await Club.findByPk(roll_no);
+  const user = await Club.findByPk(club_name);
   if (
     user !== null &&
     crypto.createHash("sha256").update(password).digest("hex") == user.password
   ) {
     return res.json({
-      access_token: jwt.encode({ roll_no: roll_no }, secret),
+      access_token: jwt.encode({ club_name: club_name }, secret),
     });
   } else {
-    return res.json({ message: "Incorrect roll number or password" });
+    return res.json({ message: "Incorrect club name or password" });
   }
 });
 
 router.post("/login/sa", async (req, res) => {
-  const roll_no = req.body.roll_no;
+  const username = req.body.username;
   const password = req.body.password;
 
-  if (!roll_no || !password)
+  if (!username || !password)
     return res.json({ msg: "One or more fields are empty." });
 
-  const user = await SysAdmin.findByPk(roll_no);
+  const user = await SysAdmin.findByPk(username);
   if (
     user !== null &&
     crypto.createHash("sha256").update(password).digest("hex") == user.password
   ) {
     return res.json({
-      access_token: jwt.encode({ roll_no: roll_no }, secret),
+      access_token: jwt.encode({ username: username }, secret),
     });
   } else {
-    return res.json({ message: "Incorrect roll number or password" });
+    return res.json({ message: "Incorrect username  or password" });
   }
 });
 
@@ -119,9 +119,10 @@ router.post("/login/sa", async (req, res) => {
 router.post("/event_add", async (req, res) => {
   let club_name;
   try {
-    club_name = jwt.decode(req.headers.authorization, secret);
+    club_name = jwt.decode(req.headers.authorization, secret).club_name;
+    if (!club_name) return res.json({ message: "jwt validation error" });
   } catch (err) {
-    res.json({ message: err.message });
+    return res.json({ message: err.message });
   }
   const { event_name, event_desc, event_venue, max_limit, slot, date } =
     req.body;
@@ -144,9 +145,9 @@ router.post("/event_add", async (req, res) => {
       max_limit,
       event_booking_id: booking.booking_id,
     });
-    res.json({ event_id: event.event_id });
+    return res.json({ event_id: event.event_id });
   } else {
-    res.json({ message: "slot unavailable" });
+    return res.json({ message: "slot unavailable" });
   }
 });
 
@@ -171,7 +172,7 @@ router.post("/event_edit", async (req, res) => {
   if (event_venue) booking.booking_venue_name = event_venue;
   await event.save();
   await booking.save();
-  res.json({ event_id: event_id });
+  return res.json({ event_id: event_id });
 });
 
 // Accepts events id and returns event details
@@ -183,7 +184,7 @@ router.post("/event_view", async (req, res) => {
   event_details["slot"] = booking.slot;
   event_details["date"] = booking.date;
   event_details["venue"] = booking.booking_venue_name;
-  res.json({ event: event_details });
+  return res.json({ event: event_details });
 });
 
 router.post("/club_edit", async (req, res) => {
@@ -191,7 +192,7 @@ router.post("/club_edit", async (req, res) => {
   const club = await Club.findByPk(club_name);
   club.club_desc = req.body.club_desc;
   await club.save();
-  res.json({ msg: "Edited" });
+  return res.json({ msg: "Edited" });
 });
 
 //  Add new club members
@@ -202,7 +203,7 @@ router.post("/club_member_add", async (req, res) => {
 
   if (student === null) return res.json({ msg: "Invalid roll no" });
   await Member.create({ roll_no, club_name, position });
-  res.json({ msg: "Member added." });
+  return res.json({ msg: "Member added." });
 });
 
 router.post("/club_member_delete", async (req, res) => {
@@ -212,7 +213,7 @@ router.post("/club_member_delete", async (req, res) => {
   const member = await Member.findOne({ where: { roll_no: roll_no } });
   await member.destroy();
 
-  res.json({ msg: "Member deleted." });
+  return res.json({ msg: "Member deleted." });
 });
 
 router.post("/club_add", async (req, res) => {
@@ -226,25 +227,25 @@ router.post("/club_add", async (req, res) => {
     club_desc,
     password: hashed_password,
   });
-  res.json({ club: club_name });
+  return res.json({ club: club_name });
 });
 
 router.post("/venue_add", async (req, res) => {
   const venue_name = req.body.venue_name;
   const venue = await Venue.create({ venue_name: venue_name });
-  res.json({ venue: venue_name });
+  return res.json({ venue: venue_name });
 });
 
 // Accepts event id, enters student into participants db, returns confirmation
 router.post("/event_register", (req, res) => {
   console.log(req);
   const roll_number = jwt.decode(req.headers.authorization, secret);
-  res.json({ roll_number });
+  return res.json({ roll_number });
 });
 
 router.get("/events_all", (req, res) => {
   const events = Event.findAll();
-  res.json({ events: events });
+  return res.json({ events: events });
 });
 
 router.get("/events_future", (req, res) => {
@@ -258,7 +259,7 @@ router.get("/events_future", (req, res) => {
       });
     }
   });
-  res.json({ events: future_events });
+  return res.json({ events: future_events });
 });
 
 router.get("/events_student", (req, res) => {
@@ -277,7 +278,7 @@ router.get("/events_student", (req, res) => {
     }
   });
 
-  res.json({ events: events });
+  return res.json({ events: events });
 });
 
 router.get("/clubs_all", (req, res) => {
@@ -285,7 +286,7 @@ router.get("/clubs_all", (req, res) => {
   if (clubs === null) {
     return res.json({ msg: "No clubs" });
   } else {
-    res.json({ clubs: clubs });
+    return res.json({ clubs: clubs });
   }
 });
 router.get("/venues_all", (req, res) => {
@@ -293,7 +294,7 @@ router.get("/venues_all", (req, res) => {
   if (venues === null) {
     return res.json({ msg: "No venues" });
   } else {
-    res.json({ venues: venues });
+    return res.json({ venues: venues });
   }
 });
 
@@ -306,14 +307,19 @@ router.get("/club_info", (req, res) => {
 });
 
 router.get("/club/:club_name", (req, res) => {
-  
   try {
     const club = Club.findByPk(req.params.club_name);
-    const events = Event.findAll({where : {event_club : req.params.club_name}});
+    const events = Event.findAll({
+      where: { event_club: req.params.club_name },
+    });
     let result = {};
     result["club_name"] = req.params.club_name;
     result["club_desc"] = club.club_desc;
-    const members_rno = Member.findAll({where : {club:req.params.club_name}});
+    const members_rno = Member.findAll({
+      where: { club: req.params.club_name },
+    });
+  } catch (err) {
+    return res.json({ msg: err.message });
   }
   // to be continued
 });
@@ -325,21 +331,21 @@ router.get("/registered_students", (req, res) => {
   const participations = Participation.findAll({
     where: { participation_event: event_id },
   });
-  participations.forEach((participation)=>{
+  participations.forEach((participation) => {
     let participant = Student.findByPk(partipation.participation_roll);
     participants.append({
-      roll_no : participant.roll_no,
-      name : participant.name ,
-      email : participant.email
-    })
+      roll_no: participant.roll_no,
+      name: participant.name,
+      email: participant.email,
+    });
   });
-  res.json({participants : participants});
+  res.json({ participants: participants });
 });
 
 router.get("/student_details", async (req, res) => {
   const roll_number = jwt.decode(req.headers.authorization, secret);
   student = Student.findByPk(roll_number);
-  res.json({msg:student});
+  res.json({ msg: student });
 });
 
 module.exports = router;
@@ -450,8 +456,8 @@ def sa_login():
 #accepts event details, enters event into event db and booking in booking db, returns event id
 @app.route("/event_add", methods=['POST'])
 @cross_origin()
-@jwt_required()
-def add_event():
+@jwt_required() 
+fdef add_event():
     event_name = request.json['event_name']
     event_club = Clubs.query.filter_by(club_name=get_jwt_identity()).first().club_name
     event_desc = request.json['event_desc']
