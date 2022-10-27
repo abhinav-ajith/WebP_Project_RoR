@@ -317,11 +317,6 @@ router.post("/event_register", async (req, res) => {
   return res.json({ msg: "Registered" });
 });
 
-router.get("/events_all", async (req, res) => {
-  const events = await Event.findAll();
-  return res.json({ events: events });
-});
-
 router.get("/events_future", async (req, res) => {
   const events = await Event.findAll();
   const future_events = [];
@@ -372,87 +367,6 @@ router.get("/venues_all", async (req, res) => {
       venues: venues.map((venue) => venue.get({ plain: true })),
     });
   }
-});
-
-router.get("/club_members", async (req, res) => {
-  let club_name;
-  try {
-    club_name = jwt.decode(req.headers.authorization, secret).club_name;
-    if (!club_name) return res.json({ message: "jwt validation error" });
-  } catch (err) {
-    return res.json({ message: err.message });
-  }
-  const members = await Member.findAll({ where: { club: club_name } });
-  const result = {};
-  for (const member of members) {
-    let name = await Student.findByPk(member.member_roll_number);
-    result["member_roll_number"] = name;
-  }
-  return res.json({ members: members });
-});
-
-router.get("/club_info", async (req, res) => {
-  let club_name;
-  try {
-    club_name = jwt.decode(req.headers.authorization, secret).club_name;
-    if (!club_name) return res.json({ message: "jwt validation error" });
-  } catch (err) {
-    return res.json({ message: err.message });
-  }
-  const club = await Club.findByPk(club_name);
-  results = {};
-  result["club_name"] = club_name;
-  result["club_desc"] = club.club_desc;
-  const members_rno = await Member.findAll({ where: { club: club_name } });
-  let members = [];
-  for (const member of members_rno) {
-    let name = await Student.findByPk(member.member_roll_number);
-    members.append({
-      name: name,
-      roll_no: member["member_roll_number"],
-      position: member["position"],
-    });
-  }
-  result["members"] = members;
-  const events = await Event.findAll({ where: { club_name: club_name } });
-  for (const event of events) {
-    let booking = await Booking.findByPk(event.event_booking_id);
-    event["slot"] = booking.slot;
-    event["date"] = booking.date;
-  }
-  result["events"] = events;
-  return res.json({ info: result });
-});
-
-router.get("/club/:club_name", async (req, res) => {
-  try {
-    const club = await Club.findByPk(req.params.club_name);
-  } catch (err) {
-    return res.json({ msg: err.message });
-  }
-  let result = {};
-  result["club_name"] = req.params.club_name;
-  result["club_desc"] = club.club_desc;
-  const members_rno = await Member.findAll({
-    where: { club: req.params.club_name },
-  });
-  let members = [];
-  for (const member of members_rno) {
-    let name = await Student.findByPk(member.member_roll_number);
-    members.append({ name: name, position: member.position });
-  }
-  result["members"] = members;
-  const events = await Event.findAll({
-    where: { event_club: req.params.club_name },
-  }).get({ plain: true });
-
-  for (const event of events) {
-    let booking = await Booking.findByPk(event.event_booking_id);
-    event["slot"] = booking.slot;
-    event["date"] = booking.date;
-  }
-  result["events"] = events;
-  return res.json({ info: result });
 });
 
 router.get("/registered_students", async (req, res) => {
