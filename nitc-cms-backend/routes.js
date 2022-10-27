@@ -151,13 +151,32 @@ router.post("/event_add", async (req, res) => {
 });
 
 // Accepts new event details if any, and returns the event id
-router.post("/event_edit", (req, res) => {
-  res.send("hello cliford");
+router.post("/event_edit", async (req, res) => {
+  const { event_id, event_name, event_desc, event_venue, max_limit, slot, date } =
+    req.body;
+  const event = await Event.findByPk(event_id);
+  const booking = await Booking.findByPk(event.event_booking_id);
+  if (event_name) event.event_name = event_name;
+  if (event_desc) event.event_desc = event_desc;
+  if (max_limit) event.max_limit = max_limit;
+  if (slot) booking.slot = slot;
+  if (date) booking.date = new Date(date).toISOString().substring(0, 10);
+  if (event_venue) booking.booking_venue_name = event_venue;
+  await event.save();
+  await booking.save();
+  res.json({ event_id :event_id });
 });
 
 // Accepts events id and returns event details
-router.post("/event_view", (req, res) => {
-  res.send("hello cliford");
+router.post("/event_view", async (req, res) => {
+  const event_id = req.body.event_id;
+  let event = await Event.findByPk(event_id);
+  const booking = await Booking.findByPk(event.event_booking_id);
+  let event_details = event;
+  event_details['slot'] = booking.slot;
+  event_details['date'] = booking.date;
+  event_details['venue'] = booking.booking_venue_name;
+  res.json({event : event_details}); 
 });
 
 router.post("/club_edit", async (req, res) => {
