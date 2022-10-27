@@ -317,58 +317,60 @@ router.post("/event_register", async (req, res) => {
   return res.json({ msg: "Registered" });
 });
 
-router.get("/events_all", (req, res) => {
-  const events = Event.findAll();
+router.get("/events_all", async (req, res) => {
+  const events = await Event.findAll();
   return res.json({ events: events });
 });
 
-router.get("/events_future", (req, res) => {
-  const events = Event.findAll();
+router.get("/events_future", async (req, res) => {
+  const events = await Event.findAll();
   const future_events = [];
-  events.forEach((event) => {
-    let booking = Booking.findByPk(event.event_booking_id);
+  for (const event of events) {
+    let booking = await Booking.findByPk(event.event_booking_id);
     if (booking.date > new Date().toISOString().substring(0, 10)) {
       future_events.append({
         ...event.get({ plain: true }, ...booking.get({ plain: true })),
       });
     }
-  });
+  }
   return res.json({ events: future_events });
 });
 
-router.get("/events_student", (req, res) => {
+router.get("/events_student", async (req, res) => {
   const roll_number = jwt.decode(req.headers.authorization, secret);
   const participations = Participation.findAll({
     where: { participation_roll: roll_number },
   });
   const events = [];
-  participations.forEach((participation) => {
-    let event = Event.findByPk(participation.participation_event);
-    let booking = Booking.findByPk(event.event_booking_id);
+  for (const participation of participations) {
+    let event = await Event.findByPk(participation.participation_event);
+    let booking = await Booking.findByPk(event.event_booking_id);
     if (booking.date > new Date().toISOString().substring(0, 10)) {
       events.append({
         ...event.get({ plain: true }, ...booking.get({ plain: true })),
       });
     }
-  });
+  }
 
   return res.json({ events: events });
 });
 
-router.get("/clubs_all", (req, res) => {
-  const clubs = Club.findAll();
+router.get("/clubs_all", async (req, res) => {
+  const clubs = await Club.findAll();
   if (clubs === null) {
     return res.json({ msg: "No clubs" });
   } else {
     return res.json({ clubs: clubs });
   }
 });
-router.get("/venues_all", (req, res) => {
-  const venues = Venue.findAll();
+router.get("/venues_all", async (req, res) => {
+  const venues = await Venue.findAll();
   if (venues === null) {
     return res.json({ msg: "No venues" });
   } else {
-    return res.json({ venues: venues });
+    return res.json({
+      venues: venues.map((venue) => venue.get({ plain: true })),
+    });
   }
 });
 
@@ -380,16 +382,16 @@ router.get("/club_info", (req, res) => {
   res.send("hello cliford");
 });
 
-router.get("/club/:club_name", (req, res) => {
+router.get("/club/:club_name", async (req, res) => {
   try {
-    const club = Club.findByPk(req.params.club_name);
-    const events = Event.findAll({
+    const club = await Club.findByPk(req.params.club_name);
+    const events = await Event.findAll({
       where: { event_club: req.params.club_name },
     });
     let result = {};
     result["club_name"] = req.params.club_name;
     result["club_desc"] = club.club_desc;
-    const members_rno = Member.findAll({
+    const members_rno = await Member.findAll({
       where: { club: req.params.club_name },
     });
   } catch (err) {
@@ -398,28 +400,28 @@ router.get("/club/:club_name", (req, res) => {
   // to be continued
 });
 
-router.get("/registered_students", (req, res) => {
+router.get("/registered_students", async (req, res) => {
   const club_name = jwt.decode(req.headers.authorization, secret);
   const event_id = req.body.event_id;
   let participants = [];
-  const participations = Participation.findAll({
+  const participations = await Participation.findAll({
     where: { participation_event: event_id },
   });
-  participations.forEach((participation) => {
+  for (const participation of participations) {
     let participant = Student.findByPk(partipation.participation_roll);
     participants.append({
       roll_no: participant.roll_no,
       name: participant.name,
       email: participant.email,
     });
-  });
+  }
   res.json({ participants: participants });
 });
 
 router.get("/student_details", async (req, res) => {
   const roll_number = jwt.decode(req.headers.authorization, secret);
-  student = Student.findByPk(roll_number);
-  res.json({ msg: student });
+  const student = await Student.findByPk(roll_number);
+  res.json({ msg: student.get({ plain: true }) });
 });
 
 module.exports = router;
