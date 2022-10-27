@@ -20,11 +20,15 @@ const ClubDetailsPanel = () => {
   return (
     <>
       <div className="p-4 text-white" style={{ height: "100vh" }}>
-      <div className="d-flex mb-5 flex-column align-items-center justify-content-center flex-grow-1">
-        <h1>
-          <b>{clubInfo?.club_name}</b>
-        </h1>
-        {clubInfo?.club_desc !== "" && <p className="form-control bg-transparent text-white" style={{ width: "800px" }}>{clubInfo?.club_desc}</p>}
+        <div className="d-flex mb-5 flex-column align-items-center justify-content-center flex-grow-1">
+          <h1>
+            <b>{clubInfo?.club_name}</b>
+          </h1>
+          {clubInfo?.club_desc !== "" && (
+            <p className="form-control bg-transparent text-white" style={{ width: "800px" }}>
+              {clubInfo?.club_desc}
+            </p>
+          )}
         </div>
         <br />
         <br />
@@ -32,7 +36,7 @@ const ClubDetailsPanel = () => {
           <div>
             <h3>Members</h3>
             <div className="overflow-auto" style={{ height: "500px", width: "700px" }}>
-            {clubInfo?.members.length === 0 && <h4 className="mt-5 text-white">No members have been added</h4>}
+              {clubInfo?.members.length === 0 && <h4 className="mt-5 text-white">No members have been added</h4>}
               {clubInfo?.members.map(({ name, position }) => (
                 <Card className="w-100 mb-2 text-black">
                   <Card.Body>
@@ -46,13 +50,13 @@ const ClubDetailsPanel = () => {
           <div>
             <h3>Events</h3>
             <div className="overflow-auto" style={{ height: "500px", width: "700px" }}>
-            {clubInfo?.events.length === 0 && <h4 className="mt-5 text-white">No events have been added</h4>}
+              {clubInfo?.events.length === 0 && <h4 className="mt-5 text-white">No events have been added</h4>}
               {clubInfo?.events.map(({ event_name, date, slot, event_id }) => (
                 <Card className="w-100 mb-2 text-black">
                   <Card.Body>
                     <Card.Title>{event_name}</Card.Title>
                     <Card.Text className="float-start m-0">
-                      {date.substring(0, date.indexOf("00:00:00"))}
+                      {date.substring(0, 10)}
                       <br />
                       {slot}
                     </Card.Text>

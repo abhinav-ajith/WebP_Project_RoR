@@ -21,7 +21,7 @@ const VenueAddModal = () => {
           {
             venue_name: name,
           },
-          { headers: { Authorization: `Bearer ${contextInfo.userToken}` } }
+          { headers: { Authorization: `${contextInfo.userToken}` } }
         )
         .then(() => {
           navigate("/admin");

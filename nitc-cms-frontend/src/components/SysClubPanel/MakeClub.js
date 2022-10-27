@@ -35,7 +35,7 @@ const ClubAddModal = () => {
           password: pword,
           club_desc: "",
         },
-        { headers: { Authorization: `Bearer ${contextInfo.userToken}` } }
+        { headers: { Authorization: `${contextInfo.userToken}` } }
       )
       .then(() => {
         navigate("/admin");

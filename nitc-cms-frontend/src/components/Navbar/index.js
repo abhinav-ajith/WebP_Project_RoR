@@ -13,7 +13,6 @@ import StudentSignUpModal from "./Modals/StudentSignUpModal";
 import axios from "axios";
 import { NavDropdown } from "react-bootstrap";
 
-
 /* This element is the navBar and it changes based on user type */
 
 const Navbar = () => {
@@ -32,7 +31,7 @@ const Navbar = () => {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_BACKEND_URL + "clubs_all", {
-        header: { Authorization: `Bearer ${userToken}` },
+        header: { Authorization: `${userToken}` },
       })
       .then((res) => {
         setClubs(res.data.clubs);

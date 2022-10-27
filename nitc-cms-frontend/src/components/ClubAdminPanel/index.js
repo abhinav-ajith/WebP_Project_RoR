@@ -37,8 +37,8 @@ const ClubAdminPanel = () => {
     }
     if (isAddingMember || isCreatingEvent) return;
     axios
-      .get(process.env.REACT_APP_BACKEND_URL + "/club_info", {
-        headers: { Authorization: `Bearer ${userToken}` },
+      .get(process.env.REACT_APP_BACKEND_URL + "club_info", {
+        headers: { Authorization: `${userToken}` },
       })
       .then((res) => {
         setClubInfo(res.data.info);
@@ -56,7 +56,7 @@ const ClubAdminPanel = () => {
             club_name: clubInfo.club_name,
             club_desc: description,
           },
-          { headers: { Authorization: `Bearer ${userToken}` } }
+          { headers: { Authorization: `${userToken}` } }
         )
         .then((res) => {
           setClubInfo({ ...clubInfo, club_desc: description });
@@ -71,7 +71,7 @@ const ClubAdminPanel = () => {
         .post(
           process.env.REACT_APP_BACKEND_URL + "club_member_delete",
           { roll_no },
-          { headers: { Authorization: `Bearer ${userToken}` } }
+          { headers: { Authorization: `${userToken}` } }
         )
         .then(() => {
           setClubInfo({ ...clubInfo, members: clubInfo.members.filter(({ roll_no: r }) => r !== roll_no) });
@@ -125,7 +125,7 @@ const ClubAdminPanel = () => {
             </div>
           </div>
           <div className="overflow-auto" style={{ height: "500px" }}>
-          {clubInfo?.members.length === 0 && <h4 className="mt-5 text-white">No members have been added</h4>}
+            {clubInfo?.members.length === 0 && <h4 className="mt-5 text-white">No members have been added</h4>}
             {clubInfo?.members.map(({ name, roll_no, position }) => {
               return (
                 <Card className="w-100 mb-2 text-black">
@@ -169,7 +169,7 @@ const ClubAdminPanel = () => {
                   <Card.Body>
                     <Card.Title>{event_name}</Card.Title>
                     <Card.Text className="float-start m-0">
-                      {date.substring(0, date.indexOf("00:00:00"))}
+                      {date.substring(0, 10)}
                       <br />
                       {slot}
                     </Card.Text>

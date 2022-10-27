@@ -23,7 +23,7 @@ const NewEventModal = ({ show, onHide }) => {
 
   useEffect(() => {
     axios
-      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `Bearer ${userToken}` } })
+      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `${userToken}` } })
       .then((res) => {
         setVenueOptions(res.data.venues.map(({ venue_name }) => venue_name));
         setEventVenue(res.data.venues[0]?.venue_name);
@@ -51,7 +51,7 @@ const NewEventModal = ({ show, onHide }) => {
           slot,
           date: eventDate,
         },
-        { headers: { Authorization: `Bearer ${userToken}` } }
+        { headers: { Authorization: `${userToken}` } }
       )
       .then((res) => {
         setLoading(false);

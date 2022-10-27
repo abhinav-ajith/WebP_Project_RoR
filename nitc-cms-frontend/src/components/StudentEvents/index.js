@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useContext } from "react";
 import { AppContext } from "../../App";
 import axios from "axios";
-import Modal from 'react-bootstrap/Modal'
+import Modal from "react-bootstrap/Modal";
 
 /* This panel displays all events a student has registered for, and lists future events he could register for */
 
@@ -21,7 +21,7 @@ const StudentEvents = () => {
   useEffect(() => {
     axios
       .get(process.env.REACT_APP_BACKEND_URL + "events_student", {
-        headers: { Authorization: `Bearer ${userToken}` },
+        headers: { Authorization: `${userToken}` },
       })
       .then((res) => {
         setRegEvents(res.data.events);
@@ -62,16 +62,14 @@ const StudentEvents = () => {
         {
           event_id: event.event_id,
         },
-        { headers: { Authorization: `Bearer ${userToken}` } }
+        { headers: { Authorization: `${userToken}` } }
       )
       .then((res) => {
-        if(res.data.msg === "Registered")
-          setIsRegistering(!isRegistering);
-        else
-          throw res.data.msg;
+        if (res.data.msg === "Registered") setIsRegistering(!isRegistering);
+        else throw res.data.msg;
       })
       .catch((msg) => {
-          setRegError(msg);
+        setRegError(msg);
       });
   }
 
@@ -113,7 +111,7 @@ const StudentEvents = () => {
               <Card.Body>
                 <Card.Title>{event.event_name}</Card.Title>
                 <Card.Subtitle className="mb-4 text-muted">{event.event_club}</Card.Subtitle>
-                <Card.Subtitle className="mb-2 text-muted">{`Date: ${event.date.substring(0, event.date.indexOf("00:00:00"))}`}</Card.Subtitle>
+                <Card.Subtitle className="mb-2 text-muted">{`Date: ${event.date.substring(0, 10)}`}</Card.Subtitle>
                 <Card.Subtitle className="mb-2 text-muted">{`Slot: ${event.slot}`}</Card.Subtitle>
                 <Card.Subtitle className="mb-2 text-muted">{`Venue: ${event.venue}`}</Card.Subtitle>
                 <Card.Subtitle className="mb-4 text-muted">{`Max participation count: ${event.max_limit}`}</Card.Subtitle>
@@ -124,7 +122,7 @@ const StudentEvents = () => {
               </Card.Body>
             </Card>
           ))}
-        <Modal show ={regError !== ""} onHide={errorHandled} size="sm" aria-labelledby="contained-modal-title-vcenter">
+        <Modal show={regError !== ""} onHide={errorHandled} size="sm" aria-labelledby="contained-modal-title-vcenter">
           <Modal.Body>
             <h5>{regError}</h5>
           </Modal.Body>

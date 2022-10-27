@@ -39,7 +39,7 @@ const ClubEventPanel = () => {
         slot: eventSlot,
         date: eventDate,
       },
-      { headers: { Authorization: `Bearer ${userToken}` } }
+      { headers: { Authorization: `${userToken}` } }
     );
   }, [eventName, eventVenue, eventDate, eventSlot, eventLimit, eventDescription, eventId, userToken]);
 
@@ -48,7 +48,7 @@ const ClubEventPanel = () => {
       .post(
         process.env.REACT_APP_BACKEND_URL + "event_view",
         { event_id: eventId },
-        { headers: { Authorization: `Bearer ${userToken}` } }
+        { headers: { Authorization: `${userToken}` } }
       )
       .then(({ data: { event } }) => {
         setEventName(event.event_name);
@@ -60,7 +60,7 @@ const ClubEventPanel = () => {
       });
 
     axios
-      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `Bearer ${userToken}` } })
+      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `${userToken}` } })
       .then((res) => {
         setVenueOptions(res.data.venues.map(({ venue_name }) => venue_name));
       });
@@ -69,7 +69,7 @@ const ClubEventPanel = () => {
       .post(
         process.env.REACT_APP_BACKEND_URL + "registered_students",
         { event_id: eventId },
-        { headers: { Authorization: `Bearer ${userToken}` } }
+        { headers: { Authorization: `${userToken}` } }
       )
       .then((res) => {
         setRegistrations(res.data.participants);
@@ -159,7 +159,7 @@ const ClubEventPanel = () => {
             return (
               <Card className="w-100 mb-2 text-black" body>
                 <Card.Title>{name}</Card.Title>
-                <div className="row"> 
+                <div className="row">
                   <Card.Subtitle className="text-secondary float-start m-0">{roll_no}</Card.Subtitle>
                   <Card.Subtitle className="text-secondary float-start m-0">{email}</Card.Subtitle>
                 </div>

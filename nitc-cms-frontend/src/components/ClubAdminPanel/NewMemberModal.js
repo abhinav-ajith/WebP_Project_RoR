@@ -31,7 +31,7 @@ const NewMemberModal = ({ show, onHide }) => {
         .post(
           process.env.REACT_APP_BACKEND_URL + "club_member_add",
           { roll_no: rollNumber, position },
-          { headers: { Authorization: `Bearer ${userToken}` } }
+          { headers: { Authorization: `${userToken}` } }
         )
         .then((res) => {
           setLoading(false);

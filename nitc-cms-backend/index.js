@@ -1,7 +1,7 @@
-var app = require("./app");
+require("dotenv").config();
 var debug = require("debug")("cms_backend:server");
 var http = require("http");
-require("dotenv").config();
+var app = require("./app");
 
 var port = process.env.PORT || 3771;
 app.set("port", port);

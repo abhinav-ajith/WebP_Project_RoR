@@ -15,7 +15,7 @@ const StudentDetails = () => {
 
     axios
       .get(process.env.REACT_APP_BACKEND_URL + "student_details", {
-        headers: { Authorization: `Bearer ${userToken}` },
+        headers: { Authorization: `${userToken}` },
       })
       .then((res) => {
         setStudent(res.data.msg);
