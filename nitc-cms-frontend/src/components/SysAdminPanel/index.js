@@ -22,11 +22,14 @@ const SysAdminPanel = () => {
     });
 
     axios
-      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", {
+      .get(process.env.REACT_APP_ROR_BACKEND_URL, {
         headers: { Authorization: `${userToken}` },
       })
       .then((res) => {
-        setVenues(res.data.venues);
+        setVenues(res.data);
+      })
+      .catch((error) => {
+        console.log(error);
       });
   }, [userToken]);
 

@@ -394,18 +394,18 @@ router.get("/clubs_all", async (req, res) => {
     return res.json({ clubs: clubs.map((c) => ({ ...c.get({ plain: true }), password: undefined })) });
   }
 });
-router.get("/venues_all", async (req, res) => {
-  const venues = await Venue.findAll();
-  if (venues === null) {
-    return res.json({ msg: "No venues" });
-  } else {
-    return res.json({
-      venues: venues.map((venue) => venue.get({ plain: true })),
-    });
-  }
-});
+// router.get("/venues_all", async (req, res) => {
+//   const venues = await Venue.findAll();
+//   if (venues === null) {
+//     return res.json({ msg: "No venues" });
+//   } else {
+//     return res.json({
+//       venues: venues.map((venue) => venue.get({ plain: true })),
+//     });
+//   }
+// });
 
-router.get("/registered_students", async (req, res) => {
+router.post("/registered_students", async (req, res) => {
   const club_name = jwt.decode(req.headers.authorization, secret);
   const event_id = req.body.event_id;
   let participants = [];

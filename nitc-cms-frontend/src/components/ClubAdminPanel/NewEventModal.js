@@ -22,12 +22,11 @@ const NewEventModal = ({ show, onHide }) => {
   const { userToken } = useContext(AppContext);
 
   useEffect(() => {
-    axios
-      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `${userToken}` } })
-      .then((res) => {
-        setVenueOptions(res.data.venues.map(({ venue_name }) => venue_name));
-        setEventVenue(res.data.venues[0]?.venue_name);
-      });
+    axios.get(process.env.REACT_APP_ROR_BACKEND_URL, { headers: { Authorization: `${userToken}` } }).then((res) => {
+      setVenueOptions(res.data.map((item) => item.venue_name));
+      // setVenueOptions(res.data);
+      setEventVenue(res.data[0]?.venue_name);
+    });
   }, [userToken]);
 
   const onHideSub = useCallback(() => {

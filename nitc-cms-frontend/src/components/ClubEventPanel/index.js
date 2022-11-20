@@ -59,11 +59,10 @@ const ClubEventPanel = () => {
         setEventDate(new Date(event.date).toISOString().substring(0, 10));
       });
 
-    axios
-      .get(process.env.REACT_APP_BACKEND_URL + "venues_all", { headers: { Authorization: `${userToken}` } })
-      .then((res) => {
-        setVenueOptions(res.data.venues.map(({ venue_name }) => venue_name));
-      });
+    axios.get(process.env.REACT_APP_ROR_BACKEND_URL, { headers: { Authorization: `${userToken}` } }).then((res) => {
+      setVenueOptions(res.data.map((item) => item.venue_name));
+      // setVenueOptions(res.data);
+    });
 
     axios
       .post(
@@ -105,9 +104,7 @@ const ClubEventPanel = () => {
                 <Form.Group className="mb-3">
                   <Form.Label>Pick Event Venue</Form.Label>
                   <Form.Select value={eventVenue} onChange={(e) => setEventVenue(e.target.value)}>
-                    {venueOptions.map((op) => (
-                      <option>{op}</option>
-                    ))}
+                    {venueOptions && venueOptions.map((op) => <option>{op}</option>)}
                   </Form.Select>
                 </Form.Group>
               </Col>
